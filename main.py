@@ -13,11 +13,9 @@ app = Flask(__name__)
 # Ініціалізація об'єкта Updater
 updater = Updater(TOKEN, use_context=True)
 
-
 # Підключення до бази даних PostgreSQL
 def connect_db():
     return psycopg2.connect(os.getenv('DATABASE_URL'), sslmode='require')
-
 
 # Створення таблиць для зберігання даних
 def create_tables():
@@ -36,7 +34,6 @@ def create_tables():
     cur.close()
     conn.close()
 
-
 # Функція для встановлення бюджету
 def set_budget(user_id, budget):
     conn = connect_db()
@@ -51,7 +48,6 @@ def set_budget(user_id, budget):
     cur.close()
     conn.close()
 
-
 # Функція для оновлення балансу після витрат
 def update_balance(user_id, amount):
     conn = connect_db()
@@ -60,7 +56,6 @@ def update_balance(user_id, amount):
     conn.commit()
     cur.close()
     conn.close()
-
 
 # Функція для отримання балансу
 def get_balance(user_id):
@@ -74,7 +69,6 @@ def get_balance(user_id):
         return result[0]
     return None
 
-
 # Функція для перевірки ролі користувача
 def get_user_role(user_id):
     conn = connect_db()
@@ -86,7 +80,6 @@ def get_user_role(user_id):
     if result:
         return result[0]
     return None
-
 
 # Функція для додавання спостерігача
 def add_observer(owner_id, observer_id):
@@ -102,7 +95,6 @@ def add_observer(owner_id, observer_id):
     cur.close()
     conn.close()
 
-
 # Команда для старту бота
 def start(update, context):
     user_id = update.message.from_user.id
@@ -115,7 +107,6 @@ def start(update, context):
         update.message.reply_text("Привіт! Ти спостерігач цього бота. Використовуй /balance, щоб переглянути залишок.")
     else:
         update.message.reply_text("Привіт! Використовуй /start для реєстрації.")
-
 
 # Команда для встановлення бюджету
 def setbudget(update, context):
@@ -131,7 +122,6 @@ def setbudget(update, context):
             update.message.reply_text("Будь ласка, введи коректну суму. Приклад: /setbudget 5000")
     else:
         update.message.reply_text("Ти не маєш прав встановлювати бюджет.")
-
 
 # Команда для витрат
 def spend(update, context):
@@ -149,7 +139,6 @@ def spend(update, context):
     else:
         update.message.reply_text("Ти не маєш прав витрачати кошти.")
 
-
 # Команда для перевірки балансу
 def balance(update, context):
     user_id = update.message.from_user.id
@@ -159,7 +148,6 @@ def balance(update, context):
         update.message.reply_text(f"Залишок: {balance} грн.")
     else:
         update.message.reply_text("Будь ласка, спочатку встанови бюджет за допомогою /setbudget.")
-
 
 # Команда для додавання спостерігача
 def addobserver(update, context):
@@ -175,7 +163,6 @@ def addobserver(update, context):
             update.message.reply_text("Будь ласка, введи коректний ID спостерігача. Приклад: /addobserver 123456789")
     else:
         update.message.reply_text("Ти не маєш прав додавати спостерігачів.")
-
 
 # Основна функція для запуску бота
 def main():
@@ -193,17 +180,17 @@ def main():
     create_tables()
 
     # Налаштування вебхука для Telegram
+    RENDER_APP_URL = os.getenv('RENDER_APP_URL')  # Налаштуй URL для Render
     PORT = int(os.environ.get('PORT', 5000))
     updater.start_webhook(listen="0.0.0.0",
                           port=PORT,
                           url_path=TOKEN)
 
     # Вказуємо Telegram API, де знаходиться вебхук
-    updater.bot.setWebhook(f"https://{os.getenv('HEROKU_APP_NAME')}.herokuapp.com/{TOKEN}")
+    updater.bot.setWebhook(f"{RENDER_APP_URL}/{TOKEN}")
 
     # Запускаємо бота
     updater.idle()
-
 
 # Обробка запитів від Telegram через Flask
 @app.route(f"/{TOKEN}", methods=["POST"])
@@ -212,7 +199,6 @@ def webhook():
     update = telegram.Update.de_json(request.get_json(force=True), updater.bot)
     updater.dispatcher.process_update(update)
     return "ok", 200
-
 
 # Запуск Flask програми
 if __name__ == "__main__":
